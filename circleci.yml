@@ -1,0 +1,12 @@
+test:
+  pre:
+    - ./gradlew wrapper
+  override:
+    - ./gradlew test
+  post:
+    - ./gradlew distZip
+
+general:
+  artifacts:
+    - "build/distributions"
+    - "build/test-results"
