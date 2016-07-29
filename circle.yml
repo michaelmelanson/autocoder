@@ -9,4 +9,3 @@ test:
 general:
   artifacts:
     - "build/distributions"
-    - "build/test-results"
