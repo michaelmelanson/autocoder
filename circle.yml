@@ -3,6 +3,8 @@ test:
     - ./gradlew wrapper
   override:
     - ./gradlew test
+    - mkdir -p $CIRCLE_TEST_REPORTS/junit
+    - cp -R build/test-results/* $CIRCLE_TEST_REPORTS/junit
   post:
     - ./gradlew distZip
 
