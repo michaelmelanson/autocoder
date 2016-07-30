@@ -1,5 +1,6 @@
 package net.michaelmelanson.autocoder;
 
+import com.google.common.collect.Lists;
 import com.shapesecurity.functional.data.ImmutableList;
 import com.shapesecurity.functional.data.Maybe;
 import com.shapesecurity.shift.ast.*;
@@ -7,6 +8,7 @@ import com.shapesecurity.shift.visitor.Reducer;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.Class;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -15,10 +17,9 @@ import java.util.function.Supplier;
 
 public class MappingReducer implements Reducer<Node> {
 
-    private Stack<Node> stack = new Stack<>();
     private final int target;
     private final Function<Node, Node> mapper;
-
+    private Stack<Node> stack = new Stack<>();
     private int index = 0;
 
     public MappingReducer(int target, java.util.function.Function<Node, Node> mapper) {
@@ -28,7 +29,16 @@ public class MappingReducer implements Reducer<Node> {
 
     private Node visit(@NotNull Node node, Supplier<Node> factory) {
         Node result;
-        System.out.println("Visited node at index " + index + ": " + node.toString());
+        Field nameField;
+        String name = "<unknown>";
+        try {
+            nameField = node.getClass().getField("name");
+            name = (String) nameField.get(node);
+        } catch (NoSuchFieldException | IllegalAccessException | ClassCastException e) {
+            // ignore
+        }
+
+        System.out.println("Visited node at index " + index + ": " + node + " with name " + name);
 
         if (index++ == this.target) {
             result = this.mapper.apply(node);
@@ -40,17 +50,23 @@ public class MappingReducer implements Reducer<Node> {
         return result;
     }
 
-    private <T> ImmutableList<T> popAll(Class<T> clazz) {
-        List<T> items = new ArrayList<T>();
-        while(!this.stack.empty() && clazz.isAssignableFrom(this.stack.peek().getClass())) {
-            items.add((T) this.stack.pop());
+    private <T> ImmutableList<T> popN(int count, Class<T> clazz) {
+        int remaining = count;
+        List<T> items = new ArrayList<>();
+        while (remaining-- > 0 && !this.stack.empty() && clazz.isAssignableFrom(this.stack.peek().getClass())) {
+            //noinspection unchecked
+            final T node = (T) this.stack.pop();
+            System.out.println("Popped " + node);
+
+            items.add(node);
         }
-        return ImmutableList.from(items);
+        return ImmutableList.from(Lists.reverse(items));
     }
 
 
     private <T> Maybe<T> maybePop(Class<T> clazz) {
         if (!this.stack.empty() && clazz.isAssignableFrom(this.stack.peek().getClass())) {
+            //noinspection unchecked
             return Maybe.of((T) this.stack.pop());
         } else {
             return Maybe.empty();
@@ -285,8 +301,8 @@ public class MappingReducer implements Reducer<Node> {
     @Override
     public Node reduceFormalParameters(@NotNull FormalParameters node, @NotNull ImmutableList<Node> items, @NotNull Maybe<Node> rest) {
         return visit(node, () -> {
-            ImmutableList<BindingBindingWithDefault> newItems = popAll(BindingBindingWithDefault.class);
-            Maybe<BindingIdentifier> newRest = maybePop(BindingIdentifier.class);
+            ImmutableList<BindingBindingWithDefault> newItems = popN(items.length, BindingBindingWithDefault.class);
+            Maybe<BindingIdentifier> newRest = rest.isNothing() ? Maybe.empty() : maybePop(BindingIdentifier.class);
             return new FormalParameters(newItems, newRest);
         });
     }
@@ -443,7 +459,7 @@ public class MappingReducer implements Reducer<Node> {
     public Node reduceScript(@NotNull Script node, @NotNull ImmutableList<Node> directives, @NotNull ImmutableList<Node> statements) {
         return visit(node, () -> {
             ImmutableList<Directive> newDirectives = ImmutableList.empty();
-            ImmutableList<Statement> newStatements = popAll(Statement.class);
+            ImmutableList<Statement> newStatements = popN(statements.length, Statement.class);
             return new Script(newDirectives, newStatements);
         });
     }
