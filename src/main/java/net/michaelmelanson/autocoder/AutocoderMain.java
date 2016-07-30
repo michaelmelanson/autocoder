@@ -1,44 +1,47 @@
 package net.michaelmelanson.autocoder;
 
-import com.shapesecurity.functional.data.ImmutableList;
-import com.shapesecurity.functional.data.Maybe;
-import com.shapesecurity.functional.data.NonEmptyImmutableList;
-import com.shapesecurity.shift.ast.*;
+import com.google.common.collect.ImmutableList;
+import com.shapesecurity.shift.ast.Script;
 import com.shapesecurity.shift.codegen.CodeGen;
+import com.shapesecurity.shift.parser.JsError;
+import com.shapesecurity.shift.parser.Parser;
 import net.michaelmelanson.autocoder.transformations.EmptyToNilAddReturnStatement;
+import net.michaelmelanson.autocoder.transformations.NilToConstantReplaceWithStringLiteral;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.util.List;
 
 public class AutocoderMain {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws JsError {
         ScriptEngineManager factory = new ScriptEngineManager();
 
         ScriptEngine engine = factory.getEngineByName("nashorn");
 
-        final NonEmptyImmutableList<Statement> program = ImmutableList.of(
-                new FunctionDeclaration(
-                        new BindingIdentifier("wordWrap"),
-                        false,
-                        new FormalParameters(ImmutableList.of(
-                                new BindingIdentifier("s"),
-                                new BindingIdentifier("length")
-                        ), Maybe.empty()),
-                        new FunctionBody(ImmutableList.empty(), ImmutableList.empty())
-                ));
-
-        Script script = new Script(ImmutableList.empty(), program);
+        Script script = Parser.parseScript("function wordWrap(s, length) {}");
 
 
-        System.out.println("Code generated: ");
+        System.out.println("Initial code:");
         System.out.println(CodeGen.codeGen(script));
 
-        Transformation transformation = new EmptyToNilAddReturnStatement(4);
+        List<Transformation> transformations = ImmutableList.of(
+                new EmptyToNilAddReturnStatement(4),
+                new NilToConstantReplaceWithStringLiteral(4, "")
+        );
 
-        Script transformed = transformation.applyTo(script);
+        final Script[] output = {script};
+        final int[] i = {0};
 
-        final String transformedSource = CodeGen.codeGen(transformed);
+        transformations.stream().forEachOrdered((transformation) -> {
+            output[0] = transformation.applyTo(output[0]);
+
+            System.out.println("After step " + ++i[0] + ": ");
+            System.out.println(CodeGen.codeGen(output[0]));
+        });
+
+
+        final String transformedSource = CodeGen.codeGen(output[0]);
 
         System.out.println("Transformed code: ");
         System.out.println(transformedSource);

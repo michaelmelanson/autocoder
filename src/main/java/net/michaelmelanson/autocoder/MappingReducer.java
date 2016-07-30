@@ -76,12 +76,11 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceArrayBinding(@NotNull ArrayBinding node, @NotNull ImmutableList<Maybe<Node>> elements, @NotNull Maybe<Node> restElement) {
-        return visit(node, () -> {
-            ImmutableList<Maybe<BindingBindingWithDefault>> newElements = ImmutableList.of(Maybe.of((BindingBindingWithDefault) this.stack.pop()));
-            Maybe<Binding> newRestElement = Maybe.of((Binding) this.stack.pop());
+        //noinspection unchecked
+        ImmutableList<Maybe<BindingBindingWithDefault>> newElements = popN(elements.length, (Class) Maybe.class);
+        Maybe<Binding> newRestElement = maybePop(Binding.class);
 
-            return new ArrayBinding(newElements, newRestElement);
-        });
+        return visit(node, () -> new ArrayBinding(newElements, newRestElement));
     }
 
     @NotNull
@@ -300,32 +299,28 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceFormalParameters(@NotNull FormalParameters node, @NotNull ImmutableList<Node> items, @NotNull Maybe<Node> rest) {
-        return visit(node, () -> {
-            ImmutableList<BindingBindingWithDefault> newItems = popN(items.length, BindingBindingWithDefault.class);
-            Maybe<BindingIdentifier> newRest = rest.isNothing() ? Maybe.empty() : maybePop(BindingIdentifier.class);
-            return new FormalParameters(newItems, newRest);
-        });
+        ImmutableList<BindingBindingWithDefault> newItems = popN(items.length, BindingBindingWithDefault.class);
+        Maybe<BindingIdentifier> newRest = rest.isNothing() ? Maybe.empty() : maybePop(BindingIdentifier.class);
+
+        return visit(node, () -> new FormalParameters(newItems, newRest));
     }
 
     @NotNull
     @Override
     public Node reduceFunctionBody(@NotNull FunctionBody node, @NotNull ImmutableList<Node> directives, @NotNull ImmutableList<Node> statements) {
-        return visit(node, () -> {
-            ImmutableList<Statement> newStatements = ImmutableList.empty();
-            ImmutableList<Directive> newDirectives = ImmutableList.empty();
-            return new FunctionBody(newDirectives, newStatements);
-        });
+        ImmutableList<Statement> newStatements = popN(statements.length, Statement.class);
+        ImmutableList<Directive> newDirectives = popN(directives.length, Directive.class);
+
+        return visit(node, () -> new FunctionBody(newDirectives, newStatements));
     }
 
     @NotNull
     @Override
     public Node reduceFunctionDeclaration(@NotNull FunctionDeclaration node, @NotNull Node name, @NotNull Node params, @NotNull Node body) {
-        return visit(node, () -> {
-            FunctionBody newBody = (FunctionBody) this.stack.pop();
-            FormalParameters newParams = (FormalParameters) this.stack.pop();
+        Maybe<FunctionBody> newBody = maybePop(FunctionBody.class);
+        Maybe<FormalParameters> newParams = maybePop(FormalParameters.class);
 
-            return new FunctionDeclaration(node.getName(), node.getIsGenerator(), newParams, newBody);
-        });
+        return visit(node, () -> new FunctionDeclaration(node.getName(), node.getIsGenerator(), newParams.fromJust(), newBody.fromJust()));
     }
 
     @NotNull
@@ -391,7 +386,7 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceLiteralNullExpression(@NotNull LiteralNullExpression node) {
-        throw new RuntimeException("Not implemented.");
+        return visit(node, LiteralNullExpression::new);
     }
 
     @NotNull
@@ -451,7 +446,7 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceReturnStatement(@NotNull ReturnStatement node, @NotNull Maybe<Node> expression) {
-        throw new RuntimeException("Not implemented.");
+        return visit(node, () -> new ReturnStatement(maybePop(Expression.class)));
     }
 
     @NotNull
