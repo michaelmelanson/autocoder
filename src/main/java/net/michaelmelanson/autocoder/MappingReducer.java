@@ -338,7 +338,7 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceIdentifierExpression(@NotNull IdentifierExpression node) {
-        throw new RuntimeException("Not implemented.");
+        return visit(node, () -> new IdentifierExpression(node.getName()));
     }
 
     @NotNull
@@ -404,7 +404,7 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceLiteralStringExpression(@NotNull LiteralStringExpression node) {
-        throw new RuntimeException("Not implemented.");
+        return visit(node, () -> new LiteralStringExpression(node.value));
     }
 
     @NotNull

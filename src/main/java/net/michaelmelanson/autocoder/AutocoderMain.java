@@ -5,8 +5,10 @@ import com.shapesecurity.shift.ast.Script;
 import com.shapesecurity.shift.codegen.CodeGen;
 import com.shapesecurity.shift.parser.JsError;
 import com.shapesecurity.shift.parser.Parser;
+import net.michaelmelanson.autocoder.transformations.ConstantToScalarReplaceWithIdentifier;
 import net.michaelmelanson.autocoder.transformations.EmptyToNilAddReturnStatement;
 import net.michaelmelanson.autocoder.transformations.NilToConstantReplaceWithStringLiteral;
+import net.michaelmelanson.autocoder.transformations.UnconditionalToIfAddNullCondition;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -27,24 +29,26 @@ public class AutocoderMain {
 
         List<Transformation> transformations = ImmutableList.of(
                 new EmptyToNilAddReturnStatement(4),
-                new NilToConstantReplaceWithStringLiteral(4, "")
+                new NilToConstantReplaceWithStringLiteral(4, ""),
+                new ConstantToScalarReplaceWithIdentifier(4, "s"),
+                new UnconditionalToIfAddNullCondition(6, "s", "")
         );
 
         final Script[] output = {script};
         final int[] i = {0};
 
         transformations.stream().forEachOrdered((transformation) -> {
+            System.out.println();
+            System.out.println("Step " + ++i[0] + ": Applying " + transformation + "...");
             output[0] = transformation.applyTo(output[0]);
 
-            System.out.println("After step " + ++i[0] + ": ");
-            System.out.println(CodeGen.codeGen(output[0]));
+            System.out.println("Result: " + CodeGen.codeGen(output[0]));
         });
 
 
         final String transformedSource = CodeGen.codeGen(output[0]);
 
-        System.out.println("Transformed code: ");
-        System.out.println(transformedSource);
+        System.out.println("Transformed code: " + transformedSource);
 
         try {
             engine.eval(transformedSource);
