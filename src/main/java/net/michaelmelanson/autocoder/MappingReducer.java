@@ -8,7 +8,6 @@ import com.shapesecurity.shift.visitor.Reducer;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.Class;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -29,16 +28,6 @@ public class MappingReducer implements Reducer<Node> {
 
     private Node visit(@NotNull Node node, Supplier<Node> factory) {
         Node result;
-        Field nameField;
-        String name = "<unknown>";
-        try {
-            nameField = node.getClass().getField("name");
-            name = (String) nameField.get(node);
-        } catch (NoSuchFieldException | IllegalAccessException | ClassCastException e) {
-            // ignore
-        }
-
-        System.out.println("Visited node at index " + index + ": " + node + " with name " + name);
 
         if (index++ == this.target) {
             result = this.mapper.apply(node);
@@ -56,8 +45,6 @@ public class MappingReducer implements Reducer<Node> {
         while (remaining-- > 0 && !this.stack.empty() && clazz.isAssignableFrom(this.stack.peek().getClass())) {
             //noinspection unchecked
             final T node = (T) this.stack.pop();
-            System.out.println("Popped " + node);
-
             items.add(node);
         }
         return ImmutableList.from(Lists.reverse(items));

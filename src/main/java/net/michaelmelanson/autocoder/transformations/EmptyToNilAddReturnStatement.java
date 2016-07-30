@@ -18,7 +18,6 @@ public class EmptyToNilAddReturnStatement implements Transformation {
     @Override
     public MappingReducer toMappingReducer() {
         return new MappingReducer(this.position, (node) -> {
-            System.out.println("Selected node: " + node.toString());
             FunctionBody body = (FunctionBody) node;
 
             return new FunctionBody(body.getDirectives(), ImmutableList.of(
