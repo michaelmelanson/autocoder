@@ -21,7 +21,7 @@ public class MappingReducer implements Reducer<Node> {
     private Stack<Node> stack = new Stack<>();
     private int index = 0;
 
-    public MappingReducer(int target, java.util.function.Function<Node, Node> mapper) {
+    public MappingReducer(int target, Function<Node, Node> mapper) {
         this.target = target;
         this.mapper = mapper;
     }
