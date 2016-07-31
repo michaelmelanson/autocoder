@@ -13,8 +13,10 @@ import java.util.List;
 import java.util.Stack;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 public class MappingReducer implements Reducer<Node> {
+    final Logger logger = Logger.getLogger(getClass().getName());
 
     private final int target;
     private final Function<Node, Node> mapper;
@@ -27,15 +29,18 @@ public class MappingReducer implements Reducer<Node> {
     }
 
     private Node visit(@NotNull Node node, Supplier<Node> factory) {
+        logger.fine("Visiting node " + node);
         Node result;
 
         if (index++ == this.target) {
             result = this.mapper.apply(node);
+            logger.fine("Replacing node " + node + " with " + result);
         } else {
             result = factory.get();
         }
 
         this.stack.push(result);
+        logger.fine("Pushed " + result + " to the stack:" + this.stack);
         return result;
     }
 
@@ -45,6 +50,7 @@ public class MappingReducer implements Reducer<Node> {
         while (remaining-- > 0 && !this.stack.empty() && clazz.isAssignableFrom(this.stack.peek().getClass())) {
             //noinspection unchecked
             final T node = (T) this.stack.pop();
+            logger.fine("Popped " + node + " from the stack: " + this.stack);
             items.add(node);
         }
         return ImmutableList.from(Lists.reverse(items));
@@ -54,8 +60,11 @@ public class MappingReducer implements Reducer<Node> {
     private <T> Maybe<T> maybePop(Class<T> clazz) {
         if (!this.stack.empty() && clazz.isAssignableFrom(this.stack.peek().getClass())) {
             //noinspection unchecked
-            return Maybe.of((T) this.stack.pop());
+            final T node = (T) this.stack.pop();
+            logger.fine("Popped " + node + "  from the stack: " + this.stack);
+            return Maybe.of(node);
         } else {
+            logger.fine("Nope! Couldn't pop anything.");
             return Maybe.empty();
         }
     }
@@ -65,7 +74,7 @@ public class MappingReducer implements Reducer<Node> {
     public Node reduceArrayBinding(@NotNull ArrayBinding node, @NotNull ImmutableList<Maybe<Node>> elements, @NotNull Maybe<Node> restElement) {
         //noinspection unchecked
         ImmutableList<Maybe<BindingBindingWithDefault>> newElements = popN(elements.length, (Class) Maybe.class);
-        Maybe<Binding> newRestElement = maybePop(Binding.class);
+        Maybe<Binding> newRestElement = restElement.isNothing() ? Maybe.empty() : maybePop(Binding.class);
 
         return visit(node, () -> new ArrayBinding(newElements, newRestElement));
     }
@@ -433,7 +442,8 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceReturnStatement(@NotNull ReturnStatement node, @NotNull Maybe<Node> expression) {
-        return visit(node, () -> new ReturnStatement(maybePop(Expression.class)));
+        final Maybe<Expression> newExpression = expression.isNothing() ? Maybe.empty() : maybePop(Expression.class);
+        return visit(node, () -> new ReturnStatement(newExpression));
     }
 
     @NotNull
