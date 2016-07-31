@@ -4,7 +4,7 @@ test:
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit && cp -R build/test-results/* $CIRCLE_TEST_REPORTS/junit
     - ./gradlew distZip
-    - bash <(curl -s https://codecov.io/bash)
+    - bash <(curl -s https://codecov.io/bash) -f build/reports/jacoco/test/jacocoTestReport.xml
 
 general:
   artifacts:
