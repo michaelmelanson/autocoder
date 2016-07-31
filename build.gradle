@@ -9,6 +9,14 @@ apply plugin: 'jacoco'
 //noinspection GroovyUnusedAssignment
 mainClassName = "net.michaelmelanson.autocoder.AutocoderMain"
 
+jacocoTestReport {
+    reports {
+        xml.enabled = true
+    }
+}
+
+check.dependsOn jacocoTestReport
+
 allprojects {
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
