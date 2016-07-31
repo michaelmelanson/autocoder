@@ -1,10 +1,10 @@
 test:
   override:
-    - ./gradlew test
+    - ./gradlew check
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit && cp -R build/test-results/* $CIRCLE_TEST_REPORTS/junit
     - ./gradlew distZip
-    - bash <(curl -s https://codecov.io/bash) -f build/jacoco/test.exec
+    - bash <(curl -s https://codecov.io/bash)
 
 general:
   artifacts:
