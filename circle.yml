@@ -5,6 +5,7 @@ test:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit
     - cp -R build/test-results/* $CIRCLE_TEST_REPORTS/junit
     - ./gradlew distZip
+    - bash <(curl -s https://codecov.io/bash)
 
 general:
   artifacts:
