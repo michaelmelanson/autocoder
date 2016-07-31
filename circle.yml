@@ -2,9 +2,9 @@ test:
   override:
     - ./gradlew test
   post:
-    - mkdir -p $CIRCLE_TEST_REPORTS/junit
-    - cp -R build/test-results/* $CIRCLE_TEST_REPORTS/junit
+    - mkdir -p $CIRCLE_TEST_REPORTS/junit && cp -R build/test-results/* $CIRCLE_TEST_REPORTS/junit
     - ./gradlew distZip
+    - mkdir -p $CIRCLE_ARTIFACTS/jacoco && cp -R build/reports/jacoco/* $CIRCLE_ARTIFACTS/jacoco
     - bash <(curl -s https://codecov.io/bash)
 
 general:
