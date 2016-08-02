@@ -41,7 +41,7 @@ public class AutocoderMain {
                         BinaryOperator.Plus,
                         new BinaryExpression(
                                 BinaryOperator.Plus,
-                                new CallExpression(new StaticMemberExpression("substring", new IdentifierExpression("s")), com.shapesecurity.functional.data.ImmutableList.of(new LiteralNumericExpression(0.0))),
+                                new CallExpression(new StaticMemberExpression("substring", new IdentifierExpression("s")), com.shapesecurity.functional.data.ImmutableList.of(new LiteralNumericExpression(0.0), new IdentifierExpression("length"))),
                                 new LiteralStringExpression("\n")
                         ),
                         new CallExpression(new StaticMemberExpression("substring", new IdentifierExpression("s")), com.shapesecurity.functional.data.ImmutableList.of(new IdentifierExpression("length"))))
