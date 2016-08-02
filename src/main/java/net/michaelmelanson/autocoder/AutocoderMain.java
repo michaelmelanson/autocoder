@@ -36,7 +36,17 @@ public class AutocoderMain {
                         BinaryOperator.LessThanEqual,
                         new CallExpression(new StaticMemberExpression("length", new IdentifierExpression("s")), com.shapesecurity.functional.data.ImmutableList.empty()),
                         new IdentifierExpression("length"))),
-                new UnconditionalToIfAddElseClauseReturningExpression(24, new LiteralStringExpression("long\nword"))
+                new UnconditionalToIfAddElseClauseReturningExpression(24, new LiteralStringExpression("long\nword")),
+                new ExpressionToFunctionReplaceWithExpression(24, new BinaryExpression(
+                        BinaryOperator.Plus,
+                        new BinaryExpression(
+                                BinaryOperator.Plus,
+                                new CallExpression(new StaticMemberExpression("substring", new IdentifierExpression("s")), com.shapesecurity.functional.data.ImmutableList.of(new LiteralNumericExpression(0.0))),
+                                new LiteralStringExpression("\n")
+                        ),
+                        new CallExpression(new StaticMemberExpression("substring", new IdentifierExpression("s")), com.shapesecurity.functional.data.ImmutableList.of(new IdentifierExpression("length"))))
+
+                )
         );
 
         final Script[] output = {script};
