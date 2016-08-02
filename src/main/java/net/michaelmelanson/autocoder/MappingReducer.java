@@ -153,7 +153,9 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceCallExpression(@NotNull CallExpression node, @NotNull Node callee, @NotNull ImmutableList<Node> arguments) {
-        throw new RuntimeException("Not implemented.");
+        ImmutableList<SpreadElementExpression> newArguments = popN(arguments.length, SpreadElementExpression.class);
+        ExpressionSuper newCallee = maybePop(ExpressionSuper.class).fromJust();
+        return visit(node, () -> new CallExpression(newCallee, newArguments));
     }
 
     @NotNull
@@ -394,7 +396,7 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceLiteralNumericExpression(@NotNull LiteralNumericExpression node) {
-        throw new RuntimeException("Not implemented.");
+        return visit(node, () -> new LiteralNumericExpression(node.getValue()));
     }
 
     @NotNull
@@ -424,7 +426,10 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceNewExpression(@NotNull NewExpression node, @NotNull Node callee, @NotNull ImmutableList<Node> arguments) {
-        throw new RuntimeException("Not implemented.");
+        ImmutableList<SpreadElementExpression> newArguments = popN(arguments.length, SpreadElementExpression.class);
+        Expression newCallee = maybePop(Expression.class).fromJust();
+
+        return visit(node, () -> new NewExpression(newCallee, newArguments));
     }
 
     @NotNull
@@ -481,7 +486,8 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceStaticMemberExpression(@NotNull StaticMemberExpression node, @NotNull Node object) {
-        throw new RuntimeException("Not implemented.");
+        ExpressionSuper newObject = maybePop(ExpressionSuper.class).fromJust();
+        return visit(node, () -> new StaticMemberExpression(node.getProperty(), newObject));
     }
 
     @NotNull
@@ -541,7 +547,8 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceThrowStatement(@NotNull ThrowStatement node, @NotNull Node expression) {
-        throw new RuntimeException("Not implemented.");
+        Expression newExpression = maybePop(Expression.class).fromJust();
+        return visit(node, () -> new ThrowStatement(newExpression));
     }
 
     @NotNull

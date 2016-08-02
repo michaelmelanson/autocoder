@@ -4,6 +4,7 @@ import com.shapesecurity.functional.data.ImmutableList;
 import com.shapesecurity.functional.data.Maybe;
 import com.shapesecurity.shift.ast.*;
 import com.shapesecurity.shift.ast.operators.BinaryOperator;
+import net.michaelmelanson.autocoder.InvalidTargetException;
 import net.michaelmelanson.autocoder.MappingReducer;
 import net.michaelmelanson.autocoder.Transformation;
 
@@ -23,22 +24,27 @@ public class UnconditionalToIfOnConditionThrowInvalidArgument implements Transfo
 
     @Override
     public MappingReducer toMappingReducer() {
-        return new MappingReducer(this.target, (node) -> new FunctionBody(
-                ((FunctionBody) node).getDirectives(),
-                ImmutableList.cons(
-                        new IfStatement(
-                                new BinaryExpression(
-                                        this.operator,
-                                        new IdentifierExpression(this.identifier),
-                                        new LiteralNumericExpression(this.value)
-                                ),
-                                new ThrowStatement(
-                                        new NewExpression(
-                                                // hack; can't figure out how to get it to add the brackets
-                                                new IdentifierExpression("InvalidArgument()"),
-                                                ImmutableList.empty())),
-                                Maybe.empty()),
-                        ((FunctionBody) node).getStatements())
-        ));
+        return new MappingReducer(this.target, (node) -> {
+            if (!FunctionBody.class.isAssignableFrom(node.getClass())) throw new InvalidTargetException(node);
+            return new FunctionBody(
+                    ((FunctionBody) node).getDirectives(),
+                    ImmutableList.cons(
+                            new IfStatement(
+                                    new BinaryExpression(
+                                            this.operator,
+                                            new IdentifierExpression(this.identifier),
+                                            new LiteralNumericExpression(this.value)
+                                    ),
+                                    new ThrowStatement(
+                                            new NewExpression(
+                                                    // hack; can't figure out how to get it to add the brackets
+                                                    new IdentifierExpression("InvalidArgument()"),
+                                                    ImmutableList.empty())),
+                                    Maybe.empty()),
+                            ((FunctionBody) node).getStatements())
+            );
+        });
     }
+
+
 }

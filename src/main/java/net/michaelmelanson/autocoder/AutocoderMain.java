@@ -1,9 +1,10 @@
 package net.michaelmelanson.autocoder;
 
 import com.google.common.collect.ImmutableList;
-import com.shapesecurity.shift.ast.Script;
+import com.shapesecurity.shift.ast.*;
 import com.shapesecurity.shift.ast.operators.BinaryOperator;
 import com.shapesecurity.shift.codegen.CodeGen;
+import com.shapesecurity.shift.codegen.PrettyCodeGen;
 import com.shapesecurity.shift.parser.JsError;
 import com.shapesecurity.shift.parser.Parser;
 import net.michaelmelanson.autocoder.transformations.*;
@@ -30,7 +31,12 @@ public class AutocoderMain {
                 new NilToConstantReplaceWithStringLiteral(4, ""),
                 new ConstantToScalarReplaceWithIdentifier(4, "s"),
                 new UnconditionalToIfOnConditionReturnLiteral(6, "s", ""),
-                new UnconditionalToIfOnConditionThrowInvalidArgument(12, "length", BinaryOperator.LessThan, 1.0)
+                new UnconditionalToIfOnConditionThrowInvalidArgument(12, "length", BinaryOperator.LessThan, 1.0),
+                new UnconditionalToIfWrapInCondition(18, new BinaryExpression(
+                        BinaryOperator.LessThanEqual,
+                        new CallExpression(new StaticMemberExpression("length", new IdentifierExpression("s")), com.shapesecurity.functional.data.ImmutableList.empty()),
+                        new IdentifierExpression("length"))),
+                new UnconditionalToIfAddElseClauseReturningExpression(24, new LiteralStringExpression("long\nword"))
         );
 
         final Script[] output = {script};
@@ -45,7 +51,7 @@ public class AutocoderMain {
         });
 
 
-        final String transformedSource = CodeGen.codeGen(output[0]);
+        final String transformedSource = PrettyCodeGen.codeGen(output[0]);
 
         System.out.println("Transformed code: " + transformedSource);
 
