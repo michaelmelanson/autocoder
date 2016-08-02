@@ -2,13 +2,11 @@ package net.michaelmelanson.autocoder;
 
 import com.google.common.collect.ImmutableList;
 import com.shapesecurity.shift.ast.Script;
+import com.shapesecurity.shift.ast.operators.BinaryOperator;
 import com.shapesecurity.shift.codegen.CodeGen;
 import com.shapesecurity.shift.parser.JsError;
 import com.shapesecurity.shift.parser.Parser;
-import net.michaelmelanson.autocoder.transformations.ConstantToScalarReplaceWithIdentifier;
-import net.michaelmelanson.autocoder.transformations.EmptyToNilAddReturnStatement;
-import net.michaelmelanson.autocoder.transformations.NilToConstantReplaceWithStringLiteral;
-import net.michaelmelanson.autocoder.transformations.UnconditionalToIfAddNullCondition;
+import net.michaelmelanson.autocoder.transformations.*;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -31,7 +29,8 @@ public class AutocoderMain {
                 new EmptyToNilAddReturnStatement(4),
                 new NilToConstantReplaceWithStringLiteral(4, ""),
                 new ConstantToScalarReplaceWithIdentifier(4, "s"),
-                new UnconditionalToIfAddNullCondition(6, "s", "")
+                new UnconditionalToIfOnConditionReturnLiteral(6, "s", ""),
+                new UnconditionalToIfOnConditionThrowInvalidArgument(12, "length", BinaryOperator.LessThan, 1.0)
         );
 
         final Script[] output = {script};

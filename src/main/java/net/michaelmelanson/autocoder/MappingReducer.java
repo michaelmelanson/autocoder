@@ -82,10 +82,8 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceArrayExpression(@NotNull ArrayExpression node, @NotNull ImmutableList<Maybe<Node>> elements) {
-        return visit(node, () -> {
-            ImmutableList<Maybe<SpreadElementExpression>> newElements = ImmutableList.from(Maybe.of((SpreadElementExpression) this.stack.pop()));
-            return new ArrayExpression(newElements);
-        });
+        ImmutableList<Maybe<SpreadElementExpression>> newElements = ImmutableList.from(Maybe.of((SpreadElementExpression) this.stack.pop()));
+        return visit(node, () -> new ArrayExpression(newElements));
     }
 
     @NotNull
@@ -103,7 +101,11 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceBinaryExpression(@NotNull BinaryExpression node, @NotNull Node left, @NotNull Node right) {
-        throw new RuntimeException("Not implemented.");
+        Expression newRight = maybePop(Expression.class).fromJust();
+        Expression newLeft = maybePop(Expression.class).fromJust();
+
+        return visit(node, () -> new BinaryExpression(node.getOperator(), newLeft, newRight));
+
     }
 
     @NotNull
@@ -340,7 +342,11 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceIfStatement(@NotNull IfStatement node, @NotNull Node test, @NotNull Node consequent, @NotNull Maybe<Node> alternate) {
-        throw new RuntimeException("Not implemented.");
+        Maybe<Statement> newAlternate = alternate.isJust() ? maybePop(Statement.class) : Maybe.empty();
+        Statement newConsequent = maybePop(Statement.class).fromJust();
+        Expression newTest = maybePop(Expression.class).fromJust();
+
+        return visit(node, () -> new IfStatement(newTest, newConsequent, newAlternate));
     }
 
     @NotNull
@@ -449,11 +455,9 @@ public class MappingReducer implements Reducer<Node> {
     @NotNull
     @Override
     public Node reduceScript(@NotNull Script node, @NotNull ImmutableList<Node> directives, @NotNull ImmutableList<Node> statements) {
-        return visit(node, () -> {
-            ImmutableList<Directive> newDirectives = ImmutableList.empty();
-            ImmutableList<Statement> newStatements = popN(statements.length, Statement.class);
-            return new Script(newDirectives, newStatements);
-        });
+        ImmutableList<Directive> newDirectives = popN(directives.length, Directive.class);
+        ImmutableList<Statement> newStatements = popN(statements.length, Statement.class);
+        return visit(node, () -> new Script(newDirectives, newStatements));
     }
 
     @NotNull

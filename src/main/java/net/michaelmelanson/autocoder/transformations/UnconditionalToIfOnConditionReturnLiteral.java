@@ -7,14 +7,14 @@ import com.shapesecurity.shift.ast.operators.BinaryOperator;
 import net.michaelmelanson.autocoder.MappingReducer;
 import net.michaelmelanson.autocoder.Transformation;
 
-public class UnconditionalToIfAddNullCondition implements Transformation {
+public class UnconditionalToIfOnConditionReturnLiteral implements Transformation {
     private final int target;
-    private final String parameter;
+    private final String identifier;
     private final String returnLiteral;
 
-    public UnconditionalToIfAddNullCondition(int target, String parameter, String returnLiteral) {
+    public UnconditionalToIfOnConditionReturnLiteral(int target, String identifier, String returnLiteral) {
         this.target = target;
-        this.parameter = parameter;
+        this.identifier = identifier;
         this.returnLiteral = returnLiteral;
     }
 
@@ -29,7 +29,7 @@ public class UnconditionalToIfAddNullCondition implements Transformation {
                             new IfStatement(
                                     new BinaryExpression(
                                             BinaryOperator.StrictEqual,
-                                            new IdentifierExpression(this.parameter),
+                                            new IdentifierExpression(this.identifier),
                                             new LiteralNullExpression()
                                     ),
                                     new ReturnStatement(
